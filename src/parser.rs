@@ -660,6 +660,37 @@ mod tests {
     }
 
     #[test]
+    fn zufallseingaben_fuehren_nicht_zum_absturz() {
+        // Einfacher Fuzz-Test: viele zufällige Eingaben aus gültigen und
+        // ungültigen Bausteinen. Es darf nie eine Panik geben, und jedes
+        // Ergebnis muss eine endliche Zahl sein.
+        let parts = [
+            "1", "9", "0", ".", ",", "e", "E", "+", "-", "−", "*", "/", "%", "^", "!", "(", ")",
+            "[", "]", "sin", "asin", "tan", "log2", "pi", "π", "√", "ans", "x", "ä", " ", "1e308",
+            "1e-308", "170", "171",
+        ];
+        let mut seed: u64 = 0x1234_5678_9abc_def0;
+        let mut next = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        for _ in 0..50_000 {
+            let mut input = String::new();
+            for _ in 0..next() % 30 {
+                input.push_str(parts[(next() % parts.len() as u64) as usize]);
+            }
+            for mode in [AngleMode::Deg, AngleMode::Rad] {
+                if let Ok(v) = evaluate(&input, mode, 42.0) {
+                    assert!(v.is_finite(), "{input} = {v}");
+                    format_number(v);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn formatierung() {
         assert_eq!(format_number(0.1 + 0.2), "0.3");
         assert_eq!(format_number(2.0), "2");

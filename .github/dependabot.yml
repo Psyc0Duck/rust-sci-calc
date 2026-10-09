@@ -1,10 +1,15 @@
 # Dependabot hält Abhängigkeiten aktuell und öffnet dafür automatisch PRs.
+# cooldown: neue Versionen erst nach einigen Tagen übernehmen. Gekaperte, bösartige
+# Releases werden meist innerhalb von Stunden entdeckt und zurückgezogen.
+# Sicherheitsupdates kommen trotzdem sofort.
 version: 2
 updates:
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       cargo:
         patterns: ["*"]
@@ -12,6 +17,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]

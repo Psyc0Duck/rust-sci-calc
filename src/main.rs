@@ -194,7 +194,13 @@ impl Calculator {
             }
             MemoryAdd => {
                 if let Some(Ok(v)) = self.result {
-                    self.memory += v;
+                    // Nicht über den Zahlenbereich hinaus aufaddieren (sonst "inf").
+                    let sum = self.memory + v;
+                    if sum.is_finite() {
+                        self.memory = sum;
+                    } else {
+                        self.result = Some(Err("Speicher voll: Ergebnis zu groß".into()));
+                    }
                 }
             }
             MemoryRecall => {
@@ -324,7 +330,8 @@ impl Calculator {
                         )
                         .on_hover_text("Klicken, um das Ergebnis einzufügen");
                     if r.clicked() {
-                        picked = Some(res.clone());
+                        // In Klammern, damit z. B. "2" + "-1.5" nicht zu "2-1.5" wird.
+                        picked = Some(format!("({res})"));
                     }
                     ui.separator();
                 }
