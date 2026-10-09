@@ -16,4 +16,7 @@ Sicherheitsupdates gibt es nur für die jeweils neueste Version.
 
 - Kein `unsafe` im eigenen Code (`#![forbid(unsafe_code)]`).
 - Eigener Ausdrucks-Parser mit Grenzen für Eingabelänge und Verschachtelungstiefe.
-- Dependabot aktualisiert Abhängigkeiten, `cargo audit` prüft sie wöchentlich auf bekannte Lücken.
+- Zufallstest (Fuzzing) des Parsers in den automatischen Tests.
+- Dependabot aktualisiert Abhängigkeiten (mit 7 Tagen Wartezeit für neue Versionen).
+- `cargo deny` prüft wöchentlich auf bekannte Lücken, erlaubte Lizenzen und Herkunft (nur crates.io).
+- GitHub Actions sind auf feste Commit-Hashes gepinnt und laufen mit minimalen Rechten.

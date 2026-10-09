@@ -1,13 +1,14 @@
 name: Security audit
 
-# Checks all dependencies against the RustSec advisory database of known
-# vulnerabilities: on changes to Cargo.toml/Cargo.lock and every Monday.
+# Checks all dependencies with cargo-deny (rules in deny.toml): known
+# vulnerabilities (RustSec advisory database), allowed licenses and origin
+# (crates.io only). Runs on dependency changes and every Monday.
 on:
   push:
     branches: [main]
-    paths: ["Cargo.toml", "Cargo.lock", ".github/workflows/audit.yml"]
+    paths: ["Cargo.toml", "Cargo.lock", "deny.toml", ".github/workflows/audit.yml"]
   pull_request:
-    paths: ["Cargo.toml", "Cargo.lock", ".github/workflows/audit.yml"]
+    paths: ["Cargo.toml", "Cargo.lock", "deny.toml", ".github/workflows/audit.yml"]
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
@@ -19,6 +20,8 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - run: cargo install cargo-audit --locked
-      - run: cargo audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cargo install cargo-deny --locked
+      - run: cargo deny check
