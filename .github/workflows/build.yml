@@ -19,7 +19,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: rustup component add clippy rustfmt
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --locked -- -D warnings
@@ -35,7 +35,7 @@ jobs:
       # C-Laufzeit fest einbinden, damit die exe ohne Zusatzpakete läuft.
       RUSTFLAGS: -C target-feature=+crt-static
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: cargo build --release --locked
       - name: Setup mit NSIS bauen
         run: |
@@ -49,7 +49,7 @@ jobs:
             -DEXE="$(cygpath -w "$PWD/target/release/taschenrechner.exe")" \
             -DOUTFILE="$(cygpath -w "$PWD/dist/Taschenrechner-Setup.exe")" \
             "$(cygpath -w "$PWD/installer/windows.nsi")"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: dist/*
@@ -58,12 +58,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: cargo build --release --locked
       - run: |
           mkdir -p dist
           tar -czf dist/taschenrechner-linux-x86_64.tar.gz -C target/release taschenrechner
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: dist/*
@@ -72,7 +72,7 @@ jobs:
     needs: test
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - run: |
           cargo build --release --locked --target aarch64-apple-darwin
@@ -84,7 +84,7 @@ jobs:
             target/aarch64-apple-darwin/release/taschenrechner \
             target/x86_64-apple-darwin/release/taschenrechner
           zip dist/taschenrechner-macos.zip taschenrechner
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: dist/*
@@ -96,7 +96,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
