@@ -40,7 +40,7 @@ VIAddVersionKey "LegalCopyright" "Apache-2.0"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\taschenrechner.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Taschenrechner starten"
 
-!insertmacro MUI_PAGE_LICENSE "..\LICENSE"
+!insertmacro MUI_PAGE_LICENSE "${__FILEDIR__}\..\LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -51,7 +51,7 @@ VIAddVersionKey "LegalCopyright" "Apache-2.0"
 Section "Install"
   SetOutPath "$INSTDIR"
   File "/oname=taschenrechner.exe" "${EXE}"
-  File "/oname=LICENSE.txt" "..\LICENSE"
+  File "/oname=LICENSE.txt" "${__FILEDIR__}\..\LICENSE"
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
   CreateShortcut "$SMPROGRAMS\${APPNAME}.lnk" "$INSTDIR\taschenrechner.exe"
