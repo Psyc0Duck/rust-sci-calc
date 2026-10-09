@@ -1,0 +1,24 @@
+[package]
+name = "taschenrechner"
+version = "0.1.0"
+edition = "2024"
+description = "Wissenschaftlicher Taschenrechner mit grafischer Oberfläche"
+license = "MIT"
+
+[dependencies]
+eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = true
