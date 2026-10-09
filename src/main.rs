@@ -1,7 +1,9 @@
-//! Wissenschaftlicher Taschenrechner mit grafischer Oberfläche (egui).
+//! Scientific calculator with a graphical user interface (egui).
+//!
+//! All user-facing text is German.
 
 #![forbid(unsafe_code)]
-// Unter Windows kein zusätzliches Konsolenfenster im Release-Build öffnen.
+// Do not open an extra console window on Windows in release builds.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod parser;
@@ -9,7 +11,7 @@ mod parser;
 use eframe::egui;
 use parser::{AngleMode, MAX_INPUT_LEN, evaluate, format_number};
 
-/// Maximale Anzahl gespeicherter Verlaufseinträge.
+/// Maximum number of history entries kept.
 const MAX_HISTORY: usize = 50;
 
 fn main() -> eframe::Result {
@@ -34,7 +36,7 @@ struct Calculator {
     memory: f64,
     mode: AngleMode,
     history: Vec<(String, String)>,
-    /// Nach Tastenklicks den Textcursor ans Ende der Eingabe setzen.
+    /// Move the text cursor to the end of the input after a key press.
     cursor_to_end: bool,
 }
 
@@ -52,7 +54,7 @@ impl Default for Calculator {
     }
 }
 
-/// Was eine Taste beim Drücken bewirkt.
+/// What a key does when pressed.
 #[derive(Clone, Copy)]
 enum Action {
     Insert(&'static str),
@@ -168,7 +170,7 @@ impl Calculator {
     fn apply(&mut self, action: Action) {
         match action {
             Insert(text) => {
-                // Nach einem Ergebnis mit einem Operator direkt weiterrechnen.
+                // After a result, continue calculating with it when an operator is pressed.
                 if self.input.is_empty()
                     && matches!(self.result, Some(Ok(_)))
                     && matches!(text, "+" | "-" | "×" | "÷" | "^" | "^2" | "^-1" | "!" | "%")
@@ -194,7 +196,7 @@ impl Calculator {
             }
             MemoryAdd => {
                 if let Some(Ok(v)) = self.result {
-                    // Nicht über den Zahlenbereich hinaus aufaddieren (sonst "inf").
+                    // Don't add beyond the f64 range (would become "inf").
                     let sum = self.memory + v;
                     if sum.is_finite() {
                         self.memory = sum;
@@ -264,7 +266,7 @@ impl Calculator {
                 if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                     self.calculate();
                 }
-                // Eingabefeld behält den Fokus, damit man direkt tippen kann.
+                // Keep focus on the input field so the user can type right away.
                 if ui.ctx().memory(|m| m.focused().is_none()) {
                     response.request_focus();
                 }
@@ -330,7 +332,7 @@ impl Calculator {
                         )
                         .on_hover_text("Klicken, um das Ergebnis einzufügen");
                     if r.clicked() {
-                        // In Klammern, damit z. B. "2" + "-1.5" nicht zu "2-1.5" wird.
+                        // Wrap in parentheses so "2" + "-1.5" doesn't become "2-1.5".
                         picked = Some(format!("({res})"));
                     }
                     ui.separator();

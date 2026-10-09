@@ -1,8 +1,8 @@
 name: Security audit
 
-# Prüft alle Abhängigkeiten mit cargo-deny (Regeln in deny.toml):
-# bekannte Sicherheitslücken (RustSec-Datenbank), erlaubte Lizenzen und Herkunft (nur crates.io).
-# Läuft bei Änderungen an den Abhängigkeiten und zusätzlich jeden Montag.
+# Checks all dependencies with cargo-deny (rules in deny.toml): known
+# vulnerabilities (RustSec advisory database), allowed licenses and origin
+# (crates.io only). Runs on dependency changes and every Monday.
 on:
   push:
     branches: [main]

@@ -1,17 +1,17 @@
-# Regeln für cargo-deny (https://embarkstudios.github.io/cargo-deny/).
-# Prüft Abhängigkeiten auf bekannte Sicherheitslücken, erlaubte Lizenzen
-# und darauf, dass Code nur von crates.io kommt.
+# Rules for cargo-deny (https://embarkstudios.github.io/cargo-deny/).
+# Checks dependencies for known vulnerabilities, allowed licenses and that
+# code only comes from crates.io.
 
 [graph]
 all-features = true
 
 [advisories]
-# Auch Warnungen (z. B. "nicht mehr gepflegt", zurückgezogene Versionen) lassen den Check fehlschlagen.
+# Warnings (e.g. unmaintained crates, yanked versions) fail the check too.
 unmaintained = "all"
 yanked = "deny"
 
 [licenses]
-# Lizenzen, die mit Apache-2.0 vereinbar sind und die Weitergabe der Programme erlauben.
+# Licenses compatible with Apache-2.0 that allow redistributing the binaries.
 allow = [
     "0BSD",
     "Apache-2.0",
@@ -34,6 +34,6 @@ multiple-versions = "allow"
 wildcards = "deny"
 
 [sources]
-# Nur crates.io, keine Abhängigkeiten direkt aus fremden Git-Repos.
+# crates.io only, no dependencies pulled directly from git repositories.
 unknown-registry = "deny"
 unknown-git = "deny"

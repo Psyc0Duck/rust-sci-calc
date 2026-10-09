@@ -1,7 +1,7 @@
-# Dependabot hält Abhängigkeiten aktuell und öffnet dafür automatisch PRs.
-# cooldown: neue Versionen erst nach einigen Tagen übernehmen. Gekaperte, bösartige
-# Releases werden meist innerhalb von Stunden entdeckt und zurückgezogen.
-# Sicherheitsupdates kommen trotzdem sofort.
+# Dependabot keeps dependencies up to date by opening PRs automatically.
+# cooldown: only pick up new versions after a few days. Hijacked, malicious
+# releases are usually detected and yanked within hours.
+# Security updates still arrive immediately.
 version: 2
 updates:
   - package-ecosystem: cargo
