@@ -1,7 +1,7 @@
 name: Security audit
 
-# Prüft alle Abhängigkeiten gegen die RustSec-Datenbank bekannter Sicherheitslücken:
-# bei Änderungen an Cargo.toml/Cargo.lock und zusätzlich jeden Montag.
+# Checks all dependencies against the RustSec advisory database of known
+# vulnerabilities: on changes to Cargo.toml/Cargo.lock and every Monday.
 on:
   push:
     branches: [main]

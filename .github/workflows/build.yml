@@ -1,7 +1,7 @@
 name: Build
 
-# Baut den Taschenrechner für Windows, Linux und macOS.
-# Bei einem Tag wie "v0.1.0" werden die Dateien als GitHub-Release veröffentlicht.
+# Builds the calculator for Windows, Linux and macOS.
+# For a tag like "v0.1.0" the files are published as a GitHub release.
 on:
   push:
     branches: [main]
@@ -32,19 +32,19 @@ jobs:
       run:
         shell: bash
     env:
-      # C-Laufzeit fest einbinden, damit die exe ohne Zusatzpakete läuft.
+      # Link the C runtime statically so the exe runs without extra packages.
       RUSTFLAGS: -C target-feature=+crt-static
     steps:
       - uses: actions/checkout@v7
       - run: cargo build --release --locked
-      - name: Setup mit NSIS bauen
+      - name: Build installer with NSIS
         run: |
           VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
           command -v makensis || choco install nsis -y --no-progress
           MAKENSIS=$(command -v makensis || echo "/c/Program Files (x86)/NSIS/makensis.exe")
           mkdir -p dist
           cp target/release/taschenrechner.exe dist/taschenrechner.exe
-          # NSIS unter Windows braucht Windows-Pfade.
+          # NSIS on Windows needs Windows-style paths.
           "$MAKENSIS" -DVERSION="$VERSION" \
             -DEXE="$(cygpath -w "$PWD/target/release/taschenrechner.exe")" \
             -DOUTFILE="$(cygpath -w "$PWD/dist/Taschenrechner-Setup.exe")" \
@@ -77,7 +77,7 @@ jobs:
       - run: |
           cargo build --release --locked --target aarch64-apple-darwin
           cargo build --release --locked --target x86_64-apple-darwin
-      - name: Universelles Programm (Apple Silicon und Intel)
+      - name: Universal binary (Apple Silicon and Intel)
         run: |
           mkdir -p dist
           lipo -create -output taschenrechner \
@@ -104,7 +104,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Wurde das Release schon auf github.com angelegt, nur die Dateien anhängen.
+          # If the release was already created on github.com, only attach the files.
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber
           else

@@ -1,38 +1,40 @@
-//! Eigener, sicherer Ausdrucks-Parser.
+//! Hand-written, safe expression parser.
 //!
-//! Der Parser führt niemals Code aus, sondern zerlegt die Eingabe in Tokens
-//! und wertet sie mit einem rekursiven Abstiegsparser aus. Eingabelänge und
-//! Verschachtelungstiefe sind begrenzt, damit bösartige oder versehentlich
-//! riesige Eingaben weder den Stack sprengen noch das Programm blockieren.
+//! The parser never executes code: it splits the input into tokens and
+//! evaluates them with a recursive descent parser. Input length and nesting
+//! depth are limited so that malicious or accidentally huge inputs can neither
+//! overflow the stack nor hang the program.
 //!
-//! Grammatik (von niedriger zu hoher Bindung):
+//! Grammar (from lowest to highest precedence):
 //!
 //! ```text
-//! ausdruck  = term { ("+" | "-") term }
-//! term      = vorzeichen { ("*" | "/" | "%" | implizit) vorzeichen }
-//! vorzeichen= ("+" | "-") vorzeichen | potenz
-//! potenz    = postfix [ "^" vorzeichen ]          (rechtsassoziativ)
-//! postfix   = primär { "!" }
-//! primär    = zahl | konstante | funktion "(" ausdruck ")" | "(" ausdruck ")"
+//! expression = term { ("+" | "-") term }
+//! term       = unary { ("*" | "/" | "%" | implicit) unary }
+//! unary      = ("+" | "-") unary | power
+//! power      = postfix [ "^" unary ]               (right-associative)
+//! postfix    = primary { "!" }
+//! primary    = number | constant | function "(" expression ")" | "(" expression ")"
 //! ```
 
 use std::fmt;
 
-/// Maximale Länge der Eingabe in Zeichen.
+/// Maximum input length in characters.
 pub const MAX_INPUT_LEN: usize = 1_000;
-/// Maximale Verschachtelungstiefe (Klammern, Vorzeichen, Potenzen).
+/// Maximum nesting depth (parentheses, signs, powers).
 pub const MAX_DEPTH: usize = 100;
-/// Größte Zahl, deren Fakultät noch berechnet wird (171! ist bereits unendlich).
+/// Largest number whose factorial is computed (171! is already infinite).
 const MAX_FACTORIAL: f64 = 170.0;
 
-/// Winkelmaß für trigonometrische Funktionen.
+/// Angle unit for trigonometric functions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AngleMode {
     Deg,
     Rad,
 }
 
-/// Fehler, die beim Zerlegen oder Auswerten auftreten können.
+/// Errors that can occur while tokenizing or evaluating.
+///
+/// The `Display` texts are shown in the (German) user interface.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CalcError {
     Empty,
@@ -164,7 +166,7 @@ impl Func {
     }
 }
 
-/// Rundet winzige Rundungsfehler bei Winkelfunktionen weg (z. B. sin(180°)).
+/// Removes tiny rounding errors from trigonometric results (e.g. sin(180°)).
 fn clean_trig(v: f64) -> f64 {
     if v.abs() < 1e-15 { 0.0 } else { v }
 }
@@ -216,7 +218,7 @@ fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
                 while let Some(&d) = chars.get(i) {
                     match d {
                         '0'..='9' => text.push(d),
-                        // Komma und Punkt sind beide als Dezimaltrennzeichen erlaubt.
+                        // Both comma and dot are accepted as decimal separator.
                         '.' | ',' if !seen_dot => {
                             seen_dot = true;
                             text.push('.');
@@ -225,7 +227,7 @@ fn tokenize(input: &str) -> Result<Vec<Token>, CalcError> {
                     }
                     i += 1;
                 }
-                // Wissenschaftliche Schreibweise, z. B. 1.5e-3
+                // Scientific notation, e.g. 1.5e-3
                 if matches!(chars.get(i), Some('e' | 'E')) {
                     let mut j = i + 1;
                     let mut exp = String::from("e");
@@ -363,7 +365,7 @@ impl Parser<'_> {
                     value /= rhs;
                 }
                 Some(Token::Percent) => {
-                    // "a % b" ist der Rest der Division (Modulo).
+                    // "a % b" is the remainder of the division (modulo).
                     self.pos += 1;
                     let rhs = self.unary()?;
                     if rhs == 0.0 {
@@ -371,7 +373,7 @@ impl Parser<'_> {
                     }
                     value %= rhs;
                 }
-                // Implizite Multiplikation: 2pi, 3(4+1), (1+2)(3+4), 2sin(30)
+                // Implicit multiplication: 2pi, 3(4+1), (1+2)(3+4), 2sin(30)
                 Some(Token::Num(_) | Token::Ident(_) | Token::LParen) => {
                     value *= self.power_level()?;
                 }
@@ -406,7 +408,7 @@ impl Parser<'_> {
         if matches!(self.peek(), Some(Token::Caret)) {
             self.pos += 1;
             self.enter()?;
-            // Rechtsassoziativ: 2^3^2 = 2^(3^2); -2^2 = -(2^2), 2^-1 erlaubt.
+            // Right-associative: 2^3^2 = 2^(3^2); -2^2 = -(2^2); 2^-1 is allowed.
             let exponent = self.unary()?;
             self.leave();
             let r = base.powf(exponent);
@@ -437,7 +439,7 @@ impl Parser<'_> {
                 "ans" => Ok(self.ans),
                 _ => {
                     let func = Func::from_name(&name).ok_or(CalcError::UnknownIdentifier(name))?;
-                    // Funktionsaufruf: Klammer ist Pflicht, z. B. sin(30)
+                    // Function call: parentheses are required, e.g. sin(30)
                     match self.next() {
                         Some(Token::LParen) => {
                             let arg = self.parenthesized_rest()?;
@@ -453,9 +455,8 @@ impl Parser<'_> {
         }
     }
 
-    /// Wertet den Inhalt nach einer öffnenden Klammer aus. Eine fehlende
-    /// schließende Klammer am Ende der Eingabe wird toleriert, wie bei
-    /// vielen Taschenrechnern üblich.
+    /// Evaluates the content after an opening parenthesis. A missing closing
+    /// parenthesis at the end of the input is tolerated, as on many calculators.
     fn parenthesized_rest(&mut self) -> Result<f64, CalcError> {
         let v = self.expression()?;
         match self.next() {
@@ -472,7 +473,7 @@ fn factorial(x: f64) -> Result<f64, CalcError> {
     if x > MAX_FACTORIAL {
         return Err(CalcError::Overflow);
     }
-    // x ist hier eine ganze Zahl zwischen 0 und 170, die Schleife ist also kurz.
+    // x is an integer between 0 and 170 here, so the loop is short.
     let mut r = 1.0;
     let mut k = 2.0;
     while k <= x {
@@ -482,10 +483,9 @@ fn factorial(x: f64) -> Result<f64, CalcError> {
     Ok(r)
 }
 
-/// Wertet einen mathematischen Ausdruck aus.
+/// Evaluates a mathematical expression.
 ///
-/// `ans` ist das vorherige Ergebnis und kann in der Eingabe mit `ans`
-/// verwendet werden.
+/// `ans` is the previous result and can be referenced in the input as `ans`.
 pub fn evaluate(input: &str, mode: AngleMode, ans: f64) -> Result<f64, CalcError> {
     if input.chars().count() > MAX_INPUT_LEN {
         return Err(CalcError::TooLong);
@@ -517,14 +517,14 @@ pub fn evaluate(input: &str, mode: AngleMode, ans: f64) -> Result<f64, CalcError
     Ok(value)
 }
 
-/// Formatiert ein Ergebnis gut lesbar (ohne störende Rundungsreste).
+/// Formats a result for display (without distracting rounding noise).
 pub fn format_number(v: f64) -> String {
     if v == 0.0 {
         return "0".into();
     }
     let abs = v.abs();
     if !(1e-9..1e15).contains(&abs) {
-        // Wissenschaftliche Schreibweise für sehr große oder kleine Zahlen.
+        // Scientific notation for very large or very small numbers.
         let s = format!("{v:.10e}");
         if let Some((mantissa, exp)) = s.split_once('e') {
             let m = trim_zeros(mantissa);
@@ -532,7 +532,7 @@ pub fn format_number(v: f64) -> String {
         }
         return s;
     }
-    // 12 signifikante Nachkommastellen reichen und verbergen f64-Rauschen.
+    // 12 significant digits are enough and hide f64 noise.
     let decimals = (11 - abs.log10().floor() as i32).clamp(0, 15) as usize;
     trim_zeros(&format!("{v:.decimals$}"))
 }
@@ -557,12 +557,12 @@ mod tests {
         let v = eval(s).unwrap_or_else(|e| panic!("{s}: {e}"));
         assert!(
             (v - expected).abs() < 1e-9 * expected.abs().max(1.0),
-            "{s} = {v}, erwartet {expected}"
+            "{s} = {v}, expected {expected}"
         );
     }
 
     #[test]
-    fn grundrechenarten() {
+    fn basic_arithmetic() {
         approx("1+2*3", 7.0);
         approx("(1+2)*3", 9.0);
         approx("10/4", 2.5);
@@ -573,7 +573,7 @@ mod tests {
     }
 
     #[test]
-    fn potenzen_und_vorzeichen() {
+    fn powers_and_signs() {
         approx("2^10", 1024.0);
         approx("2^3^2", 512.0);
         approx("-2^2", -4.0);
@@ -585,7 +585,7 @@ mod tests {
     }
 
     #[test]
-    fn funktionen_und_konstanten() {
+    fn functions_and_constants() {
         approx("sin(30)", 0.5);
         approx("cos(60)", 0.5);
         approx("tan(45)", 1.0);
@@ -604,7 +604,7 @@ mod tests {
     }
 
     #[test]
-    fn radiant() {
+    fn radians() {
         let v = evaluate("sin(pi/2)", AngleMode::Rad, 0.0);
         assert_eq!(v, Ok(1.0));
     }
@@ -615,13 +615,13 @@ mod tests {
     }
 
     #[test]
-    fn offene_klammer_wird_toleriert() {
+    fn unclosed_parenthesis_is_tolerated() {
         approx("sqrt(9", 3.0);
         approx("(1+2", 3.0);
     }
 
     #[test]
-    fn fehler() {
+    fn errors() {
         assert_eq!(eval(""), Err(CalcError::Empty));
         assert_eq!(eval("1/0"), Err(CalcError::DivisionByZero));
         assert!(matches!(eval("sqrt(-1)"), Err(CalcError::Domain(_))));
@@ -642,25 +642,25 @@ mod tests {
     }
 
     #[test]
-    fn schutz_gegen_boesartige_eingaben() {
-        // Sehr tiefe Verschachtelung darf keinen Stack-Überlauf auslösen.
+    fn protection_against_malicious_input() {
+        // Very deep nesting must not overflow the stack.
         let deep = "(".repeat(MAX_INPUT_LEN - 1) + "1";
         assert_eq!(eval(&deep), Err(CalcError::TooDeep));
         let minus = "-".repeat(MAX_INPUT_LEN - 1) + "1";
         assert_eq!(eval(&minus), Err(CalcError::TooDeep));
         let pow = "2^".repeat(MAX_INPUT_LEN / 2 - 1) + "1";
         assert_eq!(eval(&pow), Err(CalcError::TooDeep));
-        // Zu lange Eingaben werden abgewiesen.
+        // Overly long input is rejected.
         assert_eq!(
             eval(&"1".repeat(MAX_INPUT_LEN + 1)),
             Err(CalcError::TooLong)
         );
-        // Riesige Fakultät blockiert nicht.
+        // A huge factorial does not hang.
         assert_eq!(eval("1e300!"), Err(CalcError::Overflow));
     }
 
     #[test]
-    fn formatierung() {
+    fn formatting() {
         assert_eq!(format_number(0.1 + 0.2), "0.3");
         assert_eq!(format_number(2.0), "2");
         assert_eq!(format_number(-1.25), "-1.25");
