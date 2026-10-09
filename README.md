@@ -1,7 +1,7 @@
 # Taschenrechner
 
 Ein wissenschaftlicher Taschenrechner mit grafischer Oberfläche, geschrieben in Rust.
-Läuft unter Windows und Linux.
+Läuft unter Windows, Linux und macOS.
 
 ![Screenshot](docs/screenshot.png)
 
@@ -48,6 +48,17 @@ sudo apt install build-essential libxkbcommon-x11-0 libgl1
 
 Bei Fedora entsprechend `sudo dnf install gcc libxkbcommon-x11 mesa-libGL`.
 
+### macOS
+
+1. Im Terminal die Apple-Entwicklerwerkzeuge installieren: `xcode-select --install`
+2. Rust installieren:
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+3. Neues Terminal öffnen und prüfen: `cargo --version`
+
+Funktioniert auf Apple-Silicon- (M1 und neuer) und Intel-Macs.
+
 ## Bauen und starten
 
 Im Projektordner (dort, wo `Cargo.toml` liegt):
@@ -60,7 +71,10 @@ Der erste Build lädt die Abhängigkeiten und dauert einige Minuten, danach geht
 Das fertige Programm liegt anschließend hier und kann ohne Rust gestartet werden:
 
 - Windows: `target\release\taschenrechner.exe`
-- Linux: `target/release/taschenrechner`
+- Linux und macOS: `target/release/taschenrechner`
+
+Unter macOS startet das Programm am einfachsten aus dem Terminal. Da du es selbst gebaut hast,
+blockiert Gatekeeper es nicht.
 
 ## Tests
 
