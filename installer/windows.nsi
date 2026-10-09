@@ -1,10 +1,10 @@
-; Windows-Installer für den Taschenrechner (NSIS).
+; Windows installer for the calculator (NSIS).
 ;
-; Bauen (unter Windows oder Linux mit installiertem NSIS):
-;   makensis -DVERSION=0.1.0 -DEXE=pfad\zu\taschenrechner.exe -DOUTFILE=Taschenrechner-Setup.exe installer\windows.nsi
+; Build (on Windows, or on Linux with NSIS installed):
+;   makensis -DVERSION=0.1.0 -DEXE=path\to\taschenrechner.exe -DOUTFILE=Taschenrechner-Setup.exe installer\windows.nsi
 ;
-; Installiert nur für den aktuellen Benutzer nach %LOCALAPPDATA%\Programs,
-; daher sind keine Administratorrechte nötig.
+; Installs for the current user only into %LOCALAPPDATA%\Programs,
+; so no administrator rights are needed. Installer pages are in German.
 
 Unicode true
 SetCompressor /SOLID lzma

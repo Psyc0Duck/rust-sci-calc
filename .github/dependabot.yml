@@ -1,4 +1,4 @@
-# Dependabot hält Abhängigkeiten aktuell und öffnet dafür automatisch PRs.
+# Dependabot keeps dependencies up to date by opening PRs automatically.
 version: 2
 updates:
   - package-ecosystem: cargo
