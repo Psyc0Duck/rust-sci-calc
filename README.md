@@ -126,9 +126,9 @@ lässt sich erst mergen, wenn alle automatischen Prüfungen grün sind:
 
 | Prüfung | Was sie macht |
 |---|---|
-| `test` | Formatierung (`cargo fmt`), Lint (`cargo clippy`) und Tests (`cargo test`) |
+| `test` | Formatierung (`cargo fmt`), Lint (`cargo clippy`) und Tests (`cargo test`), darunter ein Zufallstest (Fuzzing) des Parsers |
 | `windows`, `linux`, `macos` | baut das Programm für jede Plattform, unter Windows samt Setup |
-| `audit` | prüft die Abhängigkeiten auf bekannte Sicherheitslücken (bei Änderungen an `Cargo.toml`/`Cargo.lock` und jeden Montag) |
+| `audit` | prüft die Abhängigkeiten mit `cargo deny` auf bekannte Sicherheitslücken, erlaubte Lizenzen und Herkunft (bei Änderungen an `Cargo.toml`, `Cargo.lock` oder `deny.toml` und jeden Montag) |
 
 Die fertig gebauten Dateien jedes Laufs findest du unter
 [Actions](https://github.com/Psyc0Duck/rust-sci-calc/actions) beim jeweiligen Lauf unter **Artifacts**.
@@ -141,12 +141,13 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
-Dependabot schlägt jede Woche Updates für Abhängigkeiten als eigene Pull Requests vor. Sind deren
-Prüfungen grün, kannst du sie mergen.
+Dependabot schlägt jede Woche Updates für Abhängigkeiten und GitHub Actions als eigene Pull Requests
+vor. Neue Versionen übernimmt es erst nach 7 Tagen, Sicherheitsupdates sofort. Sind die Prüfungen
+grün, kannst du sie mergen.
 
 ## Neue Version veröffentlichen
 
-1. **Versionsnummer erhöhen.** In `Cargo.toml` die Zeile `version = "0.1.0"` anpassen, zum Beispiel
+1. **Versionsnummer erhöhen.** In `Cargo.toml` die Zeile `version = "0.1.1"` anpassen, zum Beispiel
    auf `0.2.0`. Danach einmal `cargo build` ausführen, damit `Cargo.lock` die neue Nummer übernimmt.
    Beide Dateien per Pull Request auf `main` bringen und mergen.
 2. **Release anlegen.** Auf GitHub
@@ -170,8 +171,11 @@ dann selbst an.
   Verschachtelung, Fakultät nur bis 170. Damit kann keine Eingabe den Stack sprengen oder
   das Programm lange blockieren.
 - Rechenfehler wie Division durch null erscheinen als Meldung, das Programm läuft weiter.
+- Ein Zufallstest (Fuzzing) füttert den Parser bei jedem Testlauf mit 50.000 zufälligen, oft kaputten Eingaben.
 - Nur eine direkte Abhängigkeit (`eframe`/`egui`, ein verbreitetes GUI-Framework in reinem Rust).
-  `Cargo.lock` legt alle Versionen fest.
+  `Cargo.lock` legt alle Versionen fest. `cargo deny` erlaubt nur Pakete von crates.io mit
+  freigegebenen Lizenzen und schlägt bei bekannten Sicherheitslücken Alarm.
+- Die GitHub Actions sind auf feste Commit-Hashes gepinnt und haben nur die nötigsten Rechte.
 - Der Release-Build prüft Ganzzahl-Überläufe auch im fertigen Programm (`overflow-checks = true`).
 - Kein Netzwerkzugriff, keine Dateizugriffe, keine gespeicherten Daten.
 
@@ -185,7 +189,8 @@ Sicherheitslücken bitte vertraulich melden, siehe [SECURITY.md](SECURITY.md).
 | `src/main.rs` | die Oberfläche: Anzeige, Tastenfeld, Verlauf |
 | `installer/windows.nsi` | Skript für das Windows-Setup ([NSIS](https://nsis.sourceforge.io)) |
 | `.github/workflows/build.yml` | Prüfungen, Builds und Releases |
-| `.github/workflows/audit.yml` | Sicherheitsprüfung der Abhängigkeiten |
+| `.github/workflows/audit.yml` | Sicherheitsprüfung der Abhängigkeiten mit `cargo deny` |
+| `deny.toml` | Regeln für `cargo deny`: erlaubte Lizenzen und Quellen |
 | `.github/dependabot.yml` | automatische Update-Vorschläge |
 
 ## Lizenz
