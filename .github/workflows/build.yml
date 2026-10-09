@@ -1,0 +1,103 @@
+name: Build
+
+# Baut den Taschenrechner für Windows, Linux und macOS.
+# Bei einem Tag wie "v0.1.0" werden die Dateien als GitHub-Release veröffentlicht.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup component add clippy rustfmt
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      # C-Laufzeit fest einbinden, damit die exe ohne Zusatzpakete läuft.
+      RUSTFLAGS: -C target-feature=+crt-static
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo build --release --locked
+      - name: Setup mit NSIS bauen
+        run: |
+          VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          command -v makensis || choco install nsis -y --no-progress
+          MAKENSIS=$(command -v makensis || echo "/c/Program Files (x86)/NSIS/makensis.exe")
+          mkdir -p dist
+          cp target/release/taschenrechner.exe dist/taschenrechner.exe
+          cd installer
+          "$MAKENSIS" -DVERSION="$VERSION" -DEXE="../target/release/taschenrechner.exe" -DOUTFILE="../dist/Taschenrechner-Setup.exe" windows.nsi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  linux:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo build --release --locked
+      - run: |
+          mkdir -p dist
+          tar -czf dist/taschenrechner-linux-x86_64.tar.gz -C target/release taschenrechner
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - run: |
+          cargo build --release --locked --target aarch64-apple-darwin
+          cargo build --release --locked --target x86_64-apple-darwin
+      - name: Universelles Programm (Apple Silicon und Intel)
+        run: |
+          mkdir -p dist
+          lipo -create -output taschenrechner \
+            target/aarch64-apple-darwin/release/taschenrechner \
+            target/x86_64-apple-darwin/release/taschenrechner
+          zip dist/taschenrechner-macos.zip taschenrechner
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: cd dist && sha256sum * > SHA256SUMS.txt
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
