@@ -49,8 +49,10 @@ Die Dateien sind nicht signiert. Windows SmartScreen zeigt deshalb beim ersten S
 lässt es sich starten. macOS blockiert heruntergeladene, unsignierte Programme ebenfalls; dort
 im Finder per Rechtsklick „Öffnen“ wählen. Die Prüfsummen stehen in `SHA256SUMS.txt`.
 
-Eine neue Version veröffentlichen: Version in `Cargo.toml` erhöhen, dann einen Tag pushen, z. B.
-`git tag v0.2.0 && git push origin v0.2.0`. GitHub baut daraufhin alles automatisch.
+Eine neue Version veröffentlichen: Version in `Cargo.toml` erhöhen, dann auf GitHub unter
+**Releases → Draft a new release** einen neuen Tag wie `v0.2.0` anlegen und veröffentlichen
+(oder `git tag v0.2.0 && git push origin v0.2.0`). GitHub baut daraufhin alle Dateien und hängt sie
+nach einigen Minuten automatisch an das Release an.
 
 ## Voraussetzung: Rust installieren
 
