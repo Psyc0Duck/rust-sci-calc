@@ -34,6 +34,24 @@ Läuft unter Windows, Linux und macOS.
 - Release-Build mit Überlaufprüfung (`overflow-checks = true`).
 - Keine Netzwerkzugriffe, keine Dateien, keine gespeicherten Daten.
 
+## Fertige Programme herunterladen
+
+Unter [Releases](https://github.com/Psyc0Duck/rust-sci-calc/releases) gibt es fertige Dateien, Rust ist dafür nicht nötig:
+
+- **Windows:** `Taschenrechner-Setup.exe` installiert das Programm für deinen Benutzer (ohne Administratorrechte)
+  mit Startmenü-Eintrag und Deinstallation über die Windows-Einstellungen. Alternativ läuft
+  `taschenrechner.exe` auch direkt ohne Installation.
+- **Linux:** `taschenrechner-linux-x86_64.tar.gz`
+- **macOS:** `taschenrechner-macos.zip` (Apple Silicon und Intel)
+
+Die Dateien sind nicht signiert. Windows SmartScreen zeigt deshalb beim ersten Start
+„Der Computer wurde durch Windows geschützt“: über „Weitere Informationen“ und „Trotzdem ausführen“
+lässt es sich starten. macOS blockiert heruntergeladene, unsignierte Programme ebenfalls; dort
+im Finder per Rechtsklick „Öffnen“ wählen. Die Prüfsummen stehen in `SHA256SUMS.txt`.
+
+Eine neue Version veröffentlichen: Version in `Cargo.toml` erhöhen, dann einen Tag pushen, z. B.
+`git tag v0.2.0 && git push origin v0.2.0`. GitHub baut daraufhin alles automatisch.
+
 ## Voraussetzung: Rust installieren
 
 ### Windows
