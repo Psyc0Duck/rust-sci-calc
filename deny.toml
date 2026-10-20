@@ -9,6 +9,15 @@ all-features = true
 # Warnings (e.g. unmaintained crates, yanked versions) fail the check too.
 unmaintained = "all"
 yanked = "deny"
+# zvariant, zvariant_derive and zbus_names were merged into zbus 6 and are no
+# longer maintained on their own. They are pulled in by eframe's screen-reader
+# support (accesskit_unix on Linux) and contain no known vulnerability. Remove
+# these entries once eframe depends on zbus 6.
+ignore = [
+    { id = "RUSTSEC-2026-0370", reason = "zvariant: unmaintained only, waiting for eframe to move to zbus 6" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names: unmaintained only, waiting for eframe to move to zbus 6" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive: unmaintained only, waiting for eframe to move to zbus 6" },
+]
 
 [licenses]
 # Licenses compatible with Apache-2.0 that allow redistributing the binaries.
