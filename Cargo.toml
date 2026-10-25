@@ -7,7 +7,7 @@ license = "Apache-2.0"
 repository = "https://github.com/Psyc0Duck/rust-sci-calc"
 
 [dependencies]
-eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+eframe = { version = "0.37", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
 
 [lints.rust]
 unsafe_code = "forbid"
